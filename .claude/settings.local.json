@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/adityalamghare/.nvm/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(find /usr/local /opt /Users/adityalamghare -name \"node\" -type f 2>/dev/null | head -10)",
+      "Bash(ls /Users/adityalamghare/.cache/codex-runtimes/codex-primary-runtime/dependencies/)",
+      "Read(//Users/adityalamghare/.cache/codex-runtimes/**)"
+    ]
+  }
+}
