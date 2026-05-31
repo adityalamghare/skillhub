@@ -25,7 +25,7 @@ const DEFAULTS: Record<ConfigKey, string> = {
   SCORE_WEIGHT_UPVOTES:           "2",
   SCORE_MIN_COPIERS:              "5",
   FEATURED_SCORE_WINDOW:          "monthly",
-  FEATURED_RECIPIENT_LIST:        "", // empty = all users
+  FEATURED_RECIPIENT_LIST:        "", // group/distribution emails added on top of subscribed users
 };
 
 export async function getConfig(): Promise<Record<ConfigKey, string>> {

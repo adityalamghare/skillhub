@@ -14,6 +14,7 @@ model User {
   avatar     String?
   department String?
   isAdmin    Boolean  @default(false)
+  emailSubscribed Boolean @default(true) // receives the org-wide featured email; users can opt out
   createdAt  DateTime @default(now())
 
   skills    Skill[]
@@ -116,7 +117,7 @@ model PersonalAccessToken {
 // Admin-tunable config stored in DB (key/value pairs)
 // Keys: SCORE_WEIGHT_COPIES, SCORE_WEIGHT_COMMENTS, SCORE_WEIGHT_UNIQUE_COMMENTERS,
 //       SCORE_WEIGHT_UPVOTES, SCORE_MIN_COPIERS, FEATURED_SCORE_WINDOW,
-//       FEATURED_RECIPIENT_LIST (comma-sep emails, empty = all users)
+//       FEATURED_RECIPIENT_LIST (comma-sep group/distribution emails, added on top of subscribed users)
 model Config {
   key       String   @id
   value     String

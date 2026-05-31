@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getUserImpact } from "@/lib/queries/home";
 import TokensPanel from "./TokensPanel";
+import EmailPreferences from "./EmailPreferences";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,7 +29,7 @@ export default async function UserProfilePage({
   const [user, skills, impact] = await Promise.all([
     prisma.user.findUnique({
       where: { id },
-      select: { id: true, name: true, avatar: true, department: true, createdAt: true },
+      select: { id: true, name: true, avatar: true, department: true, createdAt: true, emailSubscribed: true },
     }),
     prisma.skill.findMany({
       where: { authorId: id, hidden: false },
@@ -122,6 +123,9 @@ export default async function UserProfilePage({
             ))}
           </div>
         </div>
+
+        {/* Email preferences (own profile only) */}
+        {isOwnProfile && <EmailPreferences subscribed={user.emailSubscribed} />}
 
         {/* Access Tokens (own profile only) */}
         {isOwnProfile && <TokensPanel />}
