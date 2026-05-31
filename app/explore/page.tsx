@@ -3,6 +3,7 @@ import { getSkills, getAllTags, PAGE_SIZE, type SortOption } from "@/lib/queries
 import SkillCard from "./SkillCard";
 import ExploreControls from "./ExploreControls";
 import Pagination from "./Pagination";
+import Nav from "@/app/components/Nav";
 
 export const metadata = { title: "Explore Skills — SkillHub" };
 
@@ -32,18 +33,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Nav */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <a href="/" className="text-lg font-bold text-gray-900">SkillHub</a>
-          <a
-            href="/submit"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition"
-          >
-            + Submit skill
-          </a>
-        </div>
-      </div>
+      <Nav />
 
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Header */}
