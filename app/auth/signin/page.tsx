@@ -2,26 +2,49 @@ import { signIn } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
-export default function SignInPage({
+const domain = process.env.ALLOWED_DOMAIN ?? "freshworks.com";
+
+const ACCESS_DENIED_MESSAGE =
+  `This account isn't allowed to access SkillHub. ` +
+  `Please sign in with your @${domain} Google account. ` +
+  `If you're an approved guest, make sure you're using the correct email address.`;
+
+const ERROR_MESSAGES: Record<string, string> = {
+  AccessDenied: ACCESS_DENIED_MESSAGE,
+  OAuthCallbackError: ACCESS_DENIED_MESSAGE,
+  OAuthSignin: "There was a problem starting the sign-in flow. Please try again.",
+  Callback: ACCESS_DENIED_MESSAGE,
+  Default: "Something went wrong during sign-in. Please try again.",
+};
+
+export default async function SignInPage({
   searchParams,
 }: {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }) {
+  const { callbackUrl, error } = await searchParams;
+  const errorMessage = error
+    ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.Default)
+    : null;
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
         <h1 className="mb-1 text-2xl font-bold text-gray-900">SkillHub</h1>
-        <p className="mb-8 text-sm text-gray-500">
+        <p className="mb-6 text-sm text-gray-500">
           Sign in with your company Google account.
         </p>
+
+        {errorMessage && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        )}
 
         <form
           action={async () => {
             "use server";
-            const params = await searchParams;
-            await signIn("google", {
-              redirectTo: params.callbackUrl ?? "/",
-            });
+            await signIn("google", { redirectTo: callbackUrl ?? "/" });
           }}
         >
           <button
