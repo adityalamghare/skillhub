@@ -160,6 +160,30 @@ export async function addCommentAction(
 }
 
 // ---------------------------------------------------------------------------
+// Edit own comment
+// ---------------------------------------------------------------------------
+export async function editCommentAction(
+  commentId: string,
+  body: string
+): Promise<{ ok: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, error: "Not signed in." };
+  if (!body.trim()) return { ok: false, error: "Comment body is required." };
+
+  const comment = await prisma.comment.findUnique({ where: { id: commentId }, select: { userId: true, skillId: true } });
+  if (!comment) return { ok: false, error: "Comment not found." };
+  if (comment.userId !== session.user.id) return { ok: false, error: "Not your comment." };
+
+  await prisma.comment.update({
+    where: { id: commentId },
+    data: { body: body.trim(), editedAt: new Date() },
+  });
+
+  revalidatePath(`/skill/${comment.skillId}`);
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
 // Delete own comment
 // ---------------------------------------------------------------------------
 export async function deleteCommentAction(commentId: string): Promise<{ ok: boolean; error?: string }> {
@@ -173,4 +197,41 @@ export async function deleteCommentAction(commentId: string): Promise<{ ok: bool
   await prisma.comment.delete({ where: { id: commentId } });
   revalidatePath(`/skill/${comment.skillId}`);
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Edit own skill (author only)
+// ---------------------------------------------------------------------------
+export async function updateSkillAction(
+  skillId: string,
+  formData: FormData
+): Promise<{ error: string } | never> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not signed in." };
+
+  const skill = await prisma.skill.findUnique({ where: { id: skillId }, select: { authorId: true } });
+  if (!skill) return { error: "Skill not found." };
+  if (skill.authorId !== session.user.id) return { error: "Not your skill." };
+
+  const title       = (formData.get("title") as string | null)?.trim() ?? "";
+  const content     = (formData.get("content") as string | null)?.trim() ?? "";
+  const description = (formData.get("description") as string | null)?.trim() ?? "";
+  const toolType    = (formData.get("toolType") as string | null) ?? "";
+  const tagsRaw     = (formData.get("tags") as string | null) ?? "";
+  const tags        = tagsRaw.split(",").map((t) => t.trim()).filter(Boolean);
+
+  if (!title)              return { error: "Title is required." };
+  if (!content)            return { error: "Skill content is required." };
+  if (tags.length === 0)   return { error: "At least one tag is required." };
+  if (!["Claude", "Cursor", "Both"].includes(toolType)) return { error: "Select a tool type." };
+
+  await prisma.skill.update({
+    where: { id: skillId },
+    data: { title, content, description, toolType: toolType as ToolType, tags },
+  });
+
+  revalidatePath(`/skill/${skillId}`);
+  revalidatePath("/explore");
+  revalidatePath("/");
+  redirect(`/skill/${skillId}`);
 }

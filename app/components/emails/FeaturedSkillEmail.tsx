@@ -19,6 +19,10 @@ export interface FeaturedSkillEmailProps {
   browseUrl: string;
   /** Defaults to the current month, e.g. "May 2026". */
   monthLabel?: string;
+  /** Feature ID used for email_open / email_click event tracking. */
+  featureId?: string;
+  /** App base URL for building tracking URLs. */
+  appUrl?: string;
 }
 
 const ACCENT = "#4f46e5";
@@ -39,11 +43,24 @@ export default function FeaturedSkillEmail({
   skillUrl,
   browseUrl,
   monthLabel,
+  featureId,
+  appUrl = "",
 }: FeaturedSkillEmailProps) {
   const hasNote = !!creatorNote && creatorNote.trim().length > 0;
   const month =
     monthLabel ||
     new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  // Tracking URLs
+  const trackingPixelUrl = featureId
+    ? `${appUrl}/api/email/open?f=${featureId}`
+    : null;
+  const trackedSkillUrl = featureId
+    ? `${appUrl}/api/email/click?f=${featureId}&u=${encodeURIComponent(skillUrl)}`
+    : skillUrl;
+  const trackedBrowseUrl = featureId
+    ? `${appUrl}/api/email/click?f=${featureId}&u=${encodeURIComponent(browseUrl)}`
+    : browseUrl;
 
   return (
     <Html>
@@ -117,7 +134,7 @@ export default function FeaturedSkillEmail({
               </Row>
 
               <Section style={{ textAlign: "center", marginTop: "24px" }}>
-                <Button style={cta} href={skillUrl}>
+                <Button style={cta} href={trackedSkillUrl}>
                   View &amp; Copy Skill →
                 </Button>
               </Section>
@@ -126,10 +143,15 @@ export default function FeaturedSkillEmail({
             <Hr style={hr} />
             <Text style={footer}>
               You&rsquo;re receiving this because you&rsquo;re part of the team.{" "}
-              <Link style={footerLink} href={browseUrl}>
+              <Link style={footerLink} href={trackedBrowseUrl}>
                 Browse all skills
               </Link>
             </Text>
+            {/* 1×1 tracking pixel */}
+            {trackingPixelUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={trackingPixelUrl} width="1" height="1" alt="" style={{ display: "block" }} />
+            )}
           </Section>
         </Container>
       </Body>

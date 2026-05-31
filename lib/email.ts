@@ -27,6 +27,7 @@ export interface FeaturedEmailPayload {
   author: { name: string };
   creatorNote: string | null;
   appUrl: string; // e.g. http://localhost:3000
+  featureId?: string; // for open/click tracking
 }
 
 async function buildHtml(p: FeaturedEmailPayload): Promise<string> {
@@ -46,6 +47,8 @@ async function buildHtml(p: FeaturedEmailPayload): Promise<string> {
     comments: skill.comments,
     skillUrl,
     browseUrl,
+    featureId: p.featureId,
+    appUrl,
   });
 
   return render(element);

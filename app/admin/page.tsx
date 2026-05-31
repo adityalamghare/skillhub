@@ -17,6 +17,8 @@ export default async function AdminPage() {
     }),
   ]);
 
+  const titleById = Object.fromEntries(skills.map((s) => [s.id, s.title]));
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -58,7 +60,7 @@ export default async function AdminPage() {
                   <td className="px-4 py-3 text-gray-400 font-mono">{i + 1}</td>
                   <td className="px-4 py-3">
                     <a href={`/skill/${s.skillId}`} className="font-medium text-indigo-600 hover:underline">
-                      {s.skillId}
+                      {titleById[s.skillId] ?? s.skillId}
                     </a>
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-gray-900">{s.score}</td>
