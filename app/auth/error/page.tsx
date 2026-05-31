@@ -1,5 +1,5 @@
 const errorMessages: Record<string, string> = {
-  AccessDenied: "Your account is not permitted to access SkillHub. Make sure you're signing in with your company Google account.",
+  AccessDenied: "Access to SkillHub is limited to Freshworks employees (@freshworks.com) and approved guests. If you believe you should have access, ask a Freshworks admin to add your email to the guest list.",
   Configuration: "There is a server configuration problem. Please contact your admin.",
   Default: "An unexpected error occurred during sign-in.",
 };

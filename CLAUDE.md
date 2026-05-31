@@ -56,3 +56,9 @@ score = copies×5 + comments×3 + uniqueCommenters×2 + upvotes×2
 - TypeScript strict; meaningful names; small components.
 - Empty / loading / error states on every interactive surface (e.g. who-copied empty state, copy-to-clipboard fallback, AI-description retry).
 - Log events for instrumentation (spec §7): `skill_submit`, `skill_view`, `copy`, `upvote`, `comment`, `feature_selected`, `email_sent`, `email_open`, `email_click`.
+
+## Deployment (live on Vercel)
+- Production auto-deploys from `main`. Never commit straight to `main` — always work on a new branch and open a PR; I click merge.
+- Schema changes: create a Prisma migration and review the generated SQL with me BEFORE committing. Production has real data.
+- Never run `prisma migrate dev` or `migrate reset` against production. Production migrations run via `prisma migrate deploy` in the Vercel build only.
+- New env vars must be added in the Vercel dashboard (Production scope), not just `.env`.

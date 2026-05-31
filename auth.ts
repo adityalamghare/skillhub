@@ -2,10 +2,14 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { prisma } from "@/lib/prisma";
 
-const allowedDomain = process.env.ALLOWED_DOMAIN ?? "";
+const allowedDomain = process.env.ALLOWED_DOMAIN ?? "freshworks.com";
 const adminEmails = (process.env.ADMIN_EMAILS ?? "")
   .split(",")
-  .map((e) => e.trim())
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+const allowedGuestEmails = (process.env.ALLOWED_GUEST_EMAILS ?? "")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -15,23 +19,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ profile }) {
       if (!profile?.email) return false;
 
-      // Hard domain restriction — enforced server-side (hd param is only a hint).
-      if (allowedDomain && !profile.email.endsWith(`@${allowedDomain}`)) {
+      const normalizedEmail = profile.email.trim().toLowerCase();
+      const domainAllowed = allowedDomain && normalizedEmail.endsWith(`@${allowedDomain}`);
+      const guestAllowed = allowedGuestEmails.includes(normalizedEmail);
+
+      if (!domainAllowed && !guestAllowed) {
         return false;
       }
 
-      const isAdmin = adminEmails.includes(profile.email);
+      const isAdmin = adminEmails.includes(normalizedEmail);
 
       await prisma.user.upsert({
-        where: { email: profile.email },
+        where: { email: normalizedEmail },
         update: {
-          name: profile.name ?? profile.email,
+          name: profile.name ?? normalizedEmail,
           avatar: (profile as { picture?: string }).picture ?? null,
           isAdmin,
         },
         create: {
-          email: profile.email,
-          name: profile.name ?? profile.email,
+          email: normalizedEmail,
+          name: profile.name ?? normalizedEmail,
           avatar: (profile as { picture?: string }).picture ?? null,
           isAdmin,
         },
