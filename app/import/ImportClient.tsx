@@ -6,6 +6,8 @@ import JSZip from "jszip";
 import { parseSkillFile, type SkillOrigin, type ParsedSkillFile } from "@/lib/importUtils";
 import { classifyImportCandidates, type ReviewCandidate } from "@/lib/actions/import";
 
+const TOOL_TYPES: ParsedSkillFile["toolType"][] = ["Claude", "Cursor", "Both"];
+
 // Paths to scan inside a folder/zip upload
 const ORIGIN_PATTERNS: { prefix: string; origin: SkillOrigin; ext: string[] }[] = [
   { prefix: ".claude/skills",  origin: "claude-local",   ext: [".md", ".skill"] },
@@ -140,8 +142,13 @@ export default function ImportClient() {
     });
   };
 
+  const updateCandidateToolType = (sourceKey: string, toolType: ParsedSkillFile["toolType"]) => {
+    setCandidates((prev) => prev.map((c) => c.sourceKey === sourceKey ? { ...c, toolType } : c));
+    setSelected((prev) => new Set(prev).add(sourceKey));
+  };
+
   const handleSubmit = async () => {
-    const toImport = candidates.filter(c => selected.has(c.sourceKey) && c.status !== "unchanged");
+    const toImport = candidates.filter(c => selected.has(c.sourceKey));
     if (toImport.length === 0) return;
     setLoading(true);
     setError(null);
@@ -150,7 +157,7 @@ export default function ImportClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          files: toImport.map(c => ({ origin: c.origin, relativePath: c.relativePath, content: c.content })),
+          files: toImport.map(c => ({ origin: c.origin, relativePath: c.relativePath, content: c.content, toolType: c.toolType })),
         }),
       });
 
@@ -273,18 +280,18 @@ export default function ImportClient() {
 
           <div className="border rounded divide-y divide-gray-100 mb-6">
             {candidates.map(c => (
-              <label
+              <div
                 key={c.sourceKey}
-                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${
-                  c.status === "unchanged" ? "opacity-50" : ""
+                className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 ${
+                  c.status === "unchanged" && !selected.has(c.sourceKey) ? "opacity-50" : ""
                 }`}
               >
                 <input
                   type="checkbox"
                   checked={selected.has(c.sourceKey)}
-                  disabled={c.status === "unchanged"}
                   onChange={() => toggleSelect(c.sourceKey)}
                   className="mt-1 shrink-0"
+                  aria-label={`Import ${c.title}`}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -295,14 +302,25 @@ export default function ImportClient() {
                   {c.description && (
                     <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.description}</p>
                   )}
-                  <div className="flex gap-2 mt-1">
-                    <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{c.toolType}</span>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                      Tool
+                      <select
+                        value={c.toolType}
+                        onChange={(e) => updateCandidateToolType(c.sourceKey, e.target.value as ParsedSkillFile["toolType"])}
+                        className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        {TOOL_TYPES.map((toolType) => (
+                          <option key={toolType} value={toolType}>{toolType}</option>
+                        ))}
+                      </select>
+                    </label>
                     {c.tags.slice(0, 3).map(t => (
                       <span key={t} className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{t}</span>
                     ))}
                   </div>
                 </div>
-              </label>
+              </div>
             ))}
           </div>
 

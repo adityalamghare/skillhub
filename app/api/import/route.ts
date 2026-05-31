@@ -32,7 +32,7 @@ async function resolveUserId(req: NextRequest): Promise<string | null> {
 
 // ---------------------------------------------------------------------------
 // POST /api/import
-// Body: { files: Array<{ origin, relativePath, content }> }
+// Body: { files: Array<{ origin, relativePath, content, toolType? }> }
 // Returns: { results: Array<{ relativePath, status, skillId }> }
 // ---------------------------------------------------------------------------
 export async function POST(req: NextRequest) {
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Maximum 200 files per import" }, { status: 400 });
   }
 
-  type FileInput = { origin: SkillOrigin; relativePath: string; content: string };
+  type FileInput = { origin: SkillOrigin; relativePath: string; content: string; toolType?: string };
 
   const results: { relativePath: string; status: string; skillId: string }[] = [];
 
@@ -72,16 +72,23 @@ export async function POST(req: NextRequest) {
     }
 
     const parsed = parseSkillFile(file.content, file.origin, file.relativePath);
+    if (typeof file.toolType === "string") {
+      if (!["Claude", "Cursor", "Both"].includes(file.toolType)) {
+        results.push({ relativePath: file.relativePath, status: "error:invalid_tool_type", skillId: "" });
+        continue;
+      }
+      parsed.toolType = file.toolType as ToolType;
+    }
     const sourceKey = buildSourceKey(userId, file.origin, file.relativePath);
 
     // Look up existing skill by sourceKey
     const existing = await prisma.skill.findUnique({
       where: { authorId_sourceKey: { authorId: userId, sourceKey } },
-      select: { id: true, contentHash: true },
+      select: { id: true, contentHash: true, toolType: true },
     });
 
     if (existing) {
-      if (existing.contentHash === parsed.contentHash) {
+      if (existing.contentHash === parsed.contentHash && existing.toolType === parsed.toolType) {
         results.push({ relativePath: file.relativePath, status: "unchanged", skillId: existing.id });
         continue;
       }

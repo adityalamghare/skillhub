@@ -45,9 +45,13 @@ export default function SubmitForm({
 
   // Duplicate check — debounced on title change
   useEffect(() => {
-    if (!title.trim()) { setDuplicates([]); return; }
+    const trimmedTitle = title.trim();
     const t = setTimeout(async () => {
-      const results = await checkDuplicatesAction(title);
+      if (!trimmedTitle) {
+        setDuplicates([]);
+        return;
+      }
+      const results = await checkDuplicatesAction(trimmedTitle);
       setDuplicates(results);
     }, 500);
     return () => clearTimeout(t);
@@ -160,8 +164,8 @@ export default function SubmitForm({
       {/* Tags */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Tags <span className="text-red-500">*</span>
-          <span className="ml-1 font-normal text-gray-400">(press Enter or comma to add)</span>
+          Tags
+          <span className="ml-1 font-normal text-gray-400">(optional, press Enter or comma to add)</span>
         </label>
         <div className="flex flex-wrap gap-2 rounded-lg border border-gray-300 px-3 py-2 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
           {tags.map((tag) => (
@@ -186,7 +190,7 @@ export default function SubmitForm({
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={handleTagKeyDown}
             onBlur={() => { if (tagInput) addTag(tagInput); }}
-            placeholder={tags.length === 0 ? "code-review, typescript…" : ""}
+            placeholder={tags.length === 0 ? "Optional: code-review, typescript…" : ""}
             className="flex-1 min-w-[120px] text-sm outline-none bg-transparent"
           />
         </div>

@@ -60,7 +60,6 @@ export async function submitSkillAction(formData: FormData): Promise<{ error: st
   // Validation
   if (!title) return { error: "Title is required." };
   if (!content) return { error: "Skill content is required." };
-  if (tags.length === 0) return { error: "At least one tag is required." };
   if (!["Claude", "Cursor", "Both"].includes(toolType))
     return { error: "Select a tool type." };
 
@@ -222,7 +221,6 @@ export async function updateSkillAction(
 
   if (!title)              return { error: "Title is required." };
   if (!content)            return { error: "Skill content is required." };
-  if (tags.length === 0)   return { error: "At least one tag is required." };
   if (!["Claude", "Cursor", "Both"].includes(toolType)) return { error: "Select a tool type." };
 
   await prisma.skill.update({
@@ -234,4 +232,30 @@ export async function updateSkillAction(
   revalidatePath("/explore");
   revalidatePath("/");
   redirect(`/skill/${skillId}`);
+}
+
+// ---------------------------------------------------------------------------
+// Delete own skill (author only; admins can delete from the detail page too)
+// ---------------------------------------------------------------------------
+export async function deleteSkillAction(skillId: string): Promise<{ ok: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, error: "Not signed in." };
+
+  const skill = await prisma.skill.findUnique({
+    where: { id: skillId },
+    select: { authorId: true },
+  });
+  if (!skill) return { ok: false, error: "Skill not found." };
+  if (skill.authorId !== session.user.id && !session.user.isAdmin) {
+    return { ok: false, error: "Not your skill." };
+  }
+
+  await prisma.skill.delete({ where: { id: skillId } });
+
+  console.log(JSON.stringify({ event: "skill_delete", skillId, userId: session.user.id }));
+
+  revalidatePath("/");
+  revalidatePath("/explore");
+  revalidatePath(`/u/${session.user.id}`);
+  return { ok: true };
 }
