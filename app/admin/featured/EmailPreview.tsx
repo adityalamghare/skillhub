@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { updateFeatureDraft, sendFeaturedEmailAction } from "@/lib/actions/featured";
+import { useToast } from "@/app/components/useToast";
+import { Toast } from "@/app/components/Toast";
 
 interface Skill {
   id: string;
@@ -30,42 +32,34 @@ interface Props {
 export default function EmailPreview({ feature, allSkills, emailHtml }: Props) {
   const [note, setNote] = useState(feature.creatorNote ?? "");
   const [swapSkillId, setSwapSkillId] = useState(feature.skill.id);
-  const [toast, setToast] = useState<{ ok: boolean; message: string } | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  function showToast(result: { ok: boolean; message: string }) {
-    setToast(result);
-    setTimeout(() => setToast(null), 4000);
-  }
+  const { toast, show } = useToast();
+  const [savePending, startSave] = useTransition();
+  const [sendPending, startSend] = useTransition();
 
   function handleSaveDraft() {
-    startTransition(async () => {
+    startSave(async () => {
       const result = await updateFeatureDraft(feature.id, {
         creatorNote: note,
         skillId: swapSkillId !== feature.skill.id ? swapSkillId : undefined,
       });
-      showToast(result);
+      show(result);
     });
   }
 
   function handleSend() {
     if (!confirm("Send this email to all org members? This cannot be undone.")) return;
-    startTransition(async () => {
+    startSend(async () => {
       const result = await sendFeaturedEmailAction(feature.id);
-      showToast(result);
+      show(result);
     });
   }
 
   const isSent = feature.status === "sent";
+  const anyPending = savePending || sendPending;
 
   return (
     <div className="space-y-6">
-      {/* Toast */}
-      {toast && (
-        <div className={`rounded-lg px-4 py-3 text-sm font-medium ${toast.ok ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"}`}>
-          {toast.message}
-        </div>
-      )}
+      <Toast toast={toast} />
 
       {isSent && (
         <div className="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-600">
@@ -84,7 +78,7 @@ export default function EmailPreview({ feature, allSkills, emailHtml }: Props) {
             <select
               value={swapSkillId}
               onChange={(e) => setSwapSkillId(e.target.value)}
-              disabled={isSent}
+              disabled={isSent || anyPending}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
             >
               {allSkills.map((s) => (
@@ -103,7 +97,7 @@ export default function EmailPreview({ feature, allSkills, emailHtml }: Props) {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={4}
-              disabled={isSent}
+              disabled={isSent || anyPending}
               placeholder="A personal note from the skill's author…"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none resize-y disabled:opacity-50"
             />
@@ -124,17 +118,19 @@ export default function EmailPreview({ feature, allSkills, emailHtml }: Props) {
             <div className="flex gap-3">
               <button
                 onClick={handleSaveDraft}
-                disabled={isPending}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition"
+                disabled={anyPending}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition"
               >
-                Save draft
+                {savePending && <Spinner />}
+                {savePending ? "Saving…" : "Save draft"}
               </button>
               <button
                 onClick={handleSend}
-                disabled={isPending}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition"
+                disabled={anyPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition"
               >
-                {isPending ? "Sending…" : "Send email →"}
+                {sendPending && <Spinner className="text-white" />}
+                {sendPending ? "Sending…" : "Send email →"}
               </button>
             </div>
           )}
@@ -154,5 +150,14 @@ export default function EmailPreview({ feature, allSkills, emailHtml }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+function Spinner({ className = "" }: { className?: string }) {
+  return (
+    <svg className={`animate-spin h-3.5 w-3.5 ${className}`} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+    </svg>
   );
 }

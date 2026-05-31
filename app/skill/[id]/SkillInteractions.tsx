@@ -164,11 +164,22 @@ function CommentRow({
   onReply?: () => void;
 }) {
   const [deleting, startTransition] = useTransition();
+  const [deleted, setDeleted] = useState(false);
 
   function handleDelete() {
+    if (!confirm("Delete this comment?")) return;
     startTransition(async () => {
-      await deleteCommentAction(comment.id);
+      const result = await deleteCommentAction(comment.id);
+      if (result.ok) setDeleted(true);
     });
+  }
+
+  if (deleted) {
+    return (
+      <div className="flex gap-3 opacity-40 italic text-xs text-gray-400 py-1">
+        Comment deleted.
+      </div>
+    );
   }
 
   return (
@@ -184,7 +195,7 @@ function CommentRow({
               disabled={deleting}
               className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50"
             >
-              Delete
+              {deleting ? "Deleting…" : "Delete"}
             </button>
           )}
         </div>

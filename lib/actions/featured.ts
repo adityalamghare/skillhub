@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getRankedEligibleSkills } from "@/lib/queries/featured";
@@ -56,7 +57,7 @@ export async function runAutoSelection(): Promise<{ ok: boolean; message: string
   console.log(JSON.stringify({ event: "feature_selected", skillId: top.skillId, type: "auto" }));
   revalidatePath("/admin");
   revalidatePath("/admin/featured");
-  return { ok: true, message: `Auto-selected skill ${top.skillId} for ${period}.` };
+  redirect("/admin/featured");
 }
 
 // ---------------------------------------------------------------------------
@@ -101,7 +102,7 @@ export async function manualFeatureSkill(
   console.log(JSON.stringify({ event: "feature_selected", skillId, type: "manual" }));
   revalidatePath("/admin");
   revalidatePath("/admin/featured");
-  return { ok: true, message: "Skill manually featured." };
+  redirect("/admin/featured");
 }
 
 // ---------------------------------------------------------------------------
