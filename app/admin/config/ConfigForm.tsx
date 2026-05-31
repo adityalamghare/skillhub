@@ -24,7 +24,7 @@ const FIELD_META: Record<string, { label: string; description: string; type?: st
   SCORE_WEIGHT_UPVOTES:           { label: "Weight: upvotes",           description: "Points per non-author upvote (default 2)" },
   SCORE_MIN_COPIERS:              { label: "Min distinct copiers",       description: "Min unique non-author copiers for eligibility (default 5)" },
   FEATURED_SCORE_WINDOW:          { label: "Score window",              description: "monthly | 7days | alltime", type: "text" },
-  FEATURED_RECIPIENT_LIST:        { label: "Email recipient list",      description: "Comma-separated emails. Leave blank to send to all users.", type: "text" },
+  FEATURED_RECIPIENT_LIST:        { label: "Group / distribution emails", description: "Comma-separated emails added on top of all subscribed users. Manage in Mailing list.", type: "text" },
 };
 
 export default function ConfigForm({ initialConfig }: { initialConfig: Record<ConfigKey, string> }) {

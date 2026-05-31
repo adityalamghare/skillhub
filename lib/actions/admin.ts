@@ -40,6 +40,19 @@ export async function deleteComment(commentId: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Mailing list — admin toggles a user's featured-email subscription.
+// Removing a user from the list simply turns their emailSubscribed flag off.
+// ---------------------------------------------------------------------------
+export async function setUserSubscription(userId: string, subscribed: boolean) {
+  await requireAdmin();
+  await prisma.user.update({
+    where: { id: userId },
+    data: { emailSubscribed: subscribed },
+  });
+  revalidatePath("/admin/mailing-list");
+}
+
+// ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 export async function saveConfigAction(

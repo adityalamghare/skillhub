@@ -190,14 +190,27 @@ export async function sendFeaturedEmailAction(
   const config = await getConfig();
   const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
-  // Build recipient list
-  let recipients: string[];
-  const recipientList = config.FEATURED_RECIPIENT_LIST.trim();
-  if (recipientList) {
-    recipients = recipientList.split(",").map((e) => e.trim()).filter(Boolean);
-  } else {
-    const users = await prisma.user.findMany({ select: { email: true } });
-    recipients = users.map((u) => u.email);
+  // Build recipient list: all subscribed users PLUS any admin-configured
+  // group/distribution emails, deduplicated case-insensitively.
+  const subscribedUsers = await prisma.user.findMany({
+    where: { emailSubscribed: true },
+    select: { email: true },
+  });
+  const groupEmails = config.FEATURED_RECIPIENT_LIST.split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  const recipients: string[] = [];
+  for (const email of [...subscribedUsers.map((u) => u.email), ...groupEmails]) {
+    const key = email.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    recipients.push(email);
+  }
+
+  if (recipients.length === 0) {
+    return { ok: false, message: "No recipients — every user has unsubscribed and no group email is set." };
   }
 
   const payload: FeaturedEmailPayload = {
