@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String
+  avatar     String?
+  department String?
+  isAdmin    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  skills    Skill[]
+  votes     Vote[]
+  comments  Comment[]
+  copies    CopyEvent[]
+  features  Feature[]  @relation("FeatureSelectedBy")
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  content     String   // raw .md
+  toolType    ToolType
+  tags        String[]
+  authorId    String
+  hidden      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author    User        @relation(fields: [authorId], references: [id])
+  votes     Vote[]
+  comments  Comment[]
+  copies    CopyEvent[]
+  features  Feature[]
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  skillId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, userId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  skillId   String
+  userId    String
+  body      String
+  parentId  String?
+  hidden    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+
+  skill    Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+}
+
+model CopyEvent {
+  id        String   @id @default(cuid())
+  skillId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, userId])
+}
+
+model Feature {
+  id           String        @id @default(cuid())
+  skillId      String
+  period       String        // YYYY-MM
+  type         FeatureType
+  creatorNote  String?
+  status       FeatureStatus @default(pending_note)
+  selectedAt   DateTime      @default(now())
+  sentAt       DateTime?
+  selectedById String
+
+  skill        Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  selectedBy   User  @relation("FeatureSelectedBy", fields: [selectedById], references: [id])
+}
+
+// Admin-tunable config stored in DB (key/value pairs)
+// Keys: SCORE_WEIGHT_COPIES, SCORE_WEIGHT_COMMENTS, SCORE_WEIGHT_UNIQUE_COMMENTERS,
+//       SCORE_WEIGHT_UPVOTES, SCORE_MIN_COPIERS, FEATURED_SCORE_WINDOW,
+//       FEATURED_RECIPIENT_LIST (comma-sep emails, empty = all users)
+model Config {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+enum ToolType {
+  Claude
+  Cursor
+  Both
+}
+
+enum FeatureType {
+  auto
+  manual
+}
+
+enum FeatureStatus {
+  pending_note
+  ready
+  sent
+}

@@ -7,7 +7,13 @@
       "Read(//opt/homebrew/bin/**)",
       "Bash(find /usr/local /opt /Users/adityalamghare -name \"node\" -type f 2>/dev/null | head -10)",
       "Bash(ls /Users/adityalamghare/.cache/codex-runtimes/codex-primary-runtime/dependencies/)",
-      "Read(//Users/adityalamghare/.cache/codex-runtimes/**)"
+      "Read(//Users/adityalamghare/.cache/codex-runtimes/**)",
+      "Bash(mv /tmp/skillhub-backup/* /Users/adityalamghare/skillhub/)",
+      "Read(//private/tmp/**)",
+      "Bash(unzip -t /tmp/pg.zip)",
+      "Bash(mkdir -p /Users/adityalamghare/.local/pgsql)",
+      "Bash(unzip -q /tmp/pg.zip -d /Users/adityalamghare/.local/)",
+      "Bash(ls /Users/adityalamghare/.local/pgsql/bin/ | head -10)"
     ]
   }
 }
