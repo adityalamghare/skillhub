@@ -46,7 +46,6 @@ export function parseSkillFile(
   relativePath: string
 ): ParsedSkillFile {
   // Strip null bytes — Postgres UTF-8 rejects them
-  // eslint-disable-next-line no-control-regex
   const sanitized = rawContent.replace(/\x00/g, "");
   const { data } = matter(sanitized);
   rawContent = sanitized;
@@ -76,7 +75,7 @@ export function parseSkillFile(
     description: String(data.description ?? data.desc ?? "").trim(),
     content: rawContent,
     toolType,
-    tags: tags.length > 0 ? tags : [origin.startsWith("cursor") ? "cursor" : "claude"],
+    tags,
     contentHash: sha256(rawContent),
   };
 }

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import DeleteSkillButton from "./DeleteSkillButton";
@@ -17,6 +18,30 @@ const TOOL_BADGE: Record<string, string> = {
   Cursor: "bg-sky-50 text-sky-700 border-sky-200",
   Both:   "bg-violet-50 text-violet-700 border-violet-200",
 };
+
+function AuthorAvatar({ avatar, name }: { avatar: string | null; name: string }) {
+  if (avatar?.startsWith("http")) {
+    return (
+      <Image
+        src={avatar}
+        alt={name}
+        width={24}
+        height={24}
+        className="h-6 w-6 shrink-0 rounded-full object-cover"
+      />
+    );
+  }
+
+  if (avatar) {
+    return <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-base leading-none">{avatar}</span>;
+  }
+
+  return (
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
+      {name[0]?.toUpperCase()}
+    </span>
+  );
+}
 
 export default async function SkillPage({
   params,
@@ -104,7 +129,7 @@ export default async function SkillPage({
           </div>
 
           <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-            {skill.author.avatar && <span className="text-base">{skill.author.avatar}</span>}
+            <AuthorAvatar avatar={skill.author.avatar} name={skill.author.name} />
             <Link href={`/u/${skill.authorId}`} className="hover:text-indigo-600 hover:underline">{skill.author.name}</Link>
             <span>·</span>
             <span>{new Date(skill.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>

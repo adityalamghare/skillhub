@@ -60,7 +60,6 @@ export async function submitSkillAction(formData: FormData): Promise<{ error: st
   // Validation
   if (!title) return { error: "Title is required." };
   if (!content) return { error: "Skill content is required." };
-  if (tags.length === 0) return { error: "At least one tag is required." };
   if (!["Claude", "Cursor", "Both"].includes(toolType))
     return { error: "Select a tool type." };
 
@@ -222,7 +221,6 @@ export async function updateSkillAction(
 
   if (!title)              return { error: "Title is required." };
   if (!content)            return { error: "Skill content is required." };
-  if (tags.length === 0)   return { error: "At least one tag is required." };
   if (!["Claude", "Cursor", "Both"].includes(toolType)) return { error: "Select a tool type." };
 
   await prisma.skill.update({
