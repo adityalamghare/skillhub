@@ -45,7 +45,7 @@ interface Props {
 // Helpers
 // ---------------------------------------------------------------------------
 function fmtDate(d: Date) {
-  return new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return new Date(d).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function Avatar({ avatar, name }: { avatar: string | null; name: string }) {
@@ -324,29 +324,55 @@ function CommentInput({
 }
 
 // ---------------------------------------------------------------------------
-// Comment thread (root + one level of replies)
+// Comment thread (root + flat replies — all replies post to root comment.id)
 // ---------------------------------------------------------------------------
 function CommentThread({ comment, skillId, currentUserId }: { comment: CommentData; skillId: string; currentUserId: string }) {
-  const [replying, setReplying] = useState(false);
+  // replyingTo: "root" | reply-id | null  — only one inline box open at a time
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+
+  function toggleReply(id: string) {
+    setReplyingTo((prev) => (prev === id ? null : id));
+  }
 
   return (
     <div className="space-y-3">
-      <CommentRow comment={comment} currentUserId={currentUserId} onReply={() => setReplying((v) => !v)} />
-      {comment.replies.map((r) => (
-        <div key={r.id} className="ml-10">
-          <CommentRow comment={r} currentUserId={currentUserId} />
-        </div>
-      ))}
-      {replying && (
+      {/* Root comment */}
+      <CommentRow
+        comment={comment}
+        currentUserId={currentUserId}
+        onReply={() => toggleReply("root")}
+      />
+      {replyingTo === "root" && (
         <div className="ml-10">
           <CommentInput
             skillId={skillId}
             parentId={comment.id}
             placeholder="Write a reply…"
-            onDone={() => setReplying(false)}
+            onDone={() => setReplyingTo(null)}
           />
         </div>
       )}
+
+      {/* Replies (flat) — all new replies also post to root comment.id */}
+      {comment.replies.map((r) => (
+        <div key={r.id} className="ml-10 space-y-2">
+          <CommentRow
+            comment={r}
+            currentUserId={currentUserId}
+            onReply={() => toggleReply(r.id)}
+          />
+          {replyingTo === r.id && (
+            <div className="ml-9">
+              <CommentInput
+                skillId={skillId}
+                parentId={comment.id}
+                placeholder={`Reply to thread…`}
+                onDone={() => setReplyingTo(null)}
+              />
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
