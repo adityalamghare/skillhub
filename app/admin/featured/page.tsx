@@ -49,7 +49,7 @@ export default async function AdminFeaturedPage() {
   }
 
   const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const emailHtml = buildHtml({
+  const emailHtml = await buildHtml({
     skill: {
       id:          feature.skill.id,
       title:       feature.skill.title,
