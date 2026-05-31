@@ -25,16 +25,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         : false;
       const guestAllowed = allowedGuestEmails.includes(normalizedEmail);
 
-      console.log(JSON.stringify({
-        event: "signIn_attempt",
-        normalizedEmail,
-        profileEmail: profile?.email ?? null,
-        userEmail: user?.email ?? null,
-        domainAllowed,
-        guestAllowed,
-        allowedGuestEmails,
-      }));
-
       if (!normalizedEmail) return false;
       if (!domainAllowed && !guestAllowed) {
         return false;
