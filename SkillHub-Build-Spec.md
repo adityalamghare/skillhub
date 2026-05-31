@@ -116,7 +116,6 @@ FeaturedScore =
 - **Window:** for monthly featuring, score on activity **within the current calendar month**. (May run all-time during early low-volume weeks — make the window a config flag.) Trending-this-week uses the same formula over a rolling 7-day window.
 
 **Eligibility for auto-selection (all must hold):**
-- ≥ 5 distinct non-author copiers.
 - **Not featured (auto OR manual) in the last 12 months.**
 - Author is an active employee.
 
@@ -125,13 +124,13 @@ FeaturedScore =
 **Overrides & guardrails:**
 - Admin manual feature may bypass the 12-month cooldown, but must confirm first.
 - Self-actions never count (anti-gaming).
-- Weights and the copier threshold are admin-tunable.
+- Weights are admin-tunable.
 
 ---
 
 ## 6. Screens
 
-`/` Home · `/explore` browse+search · `/skill/[id]` detail · `/submit` submit/edit · `/u/[id]` profile · `/leaderboards` · `/admin` + `/admin/featured`.
+`/` Home · `/explore` browse+search · `/skill/[id]` detail · `/submit` submit/edit · `/u/[id]` profile · `/leaderboards` · `/admin` + `/admin/featured` · `/import` bulk import.
 
 Each interactive surface needs sensible empty, loading, and error states (e.g. empty "Who copied" → "Be the first to copy this"; copy-to-clipboard failure → manual-copy fallback; AI description failure → retry/manual). No formal Figma mocks required — internal tool.
 
@@ -145,4 +144,58 @@ Log: `skill_submit`, `skill_view`, `copy`, `upvote`, `comment`, `feature_selecte
 
 ## 8. Out of Scope for v1 (do not build yet)
 
-Skill versioning/changelog, collections/folders, Slack notifications, fork/remix lineage, a full analytics dashboard, and any "who copied" opt-out (public by default now; revisit with HR/Legal later). Build the loop end-to-end first: SSO → submit (+AI desc) → browse → detail (copy/upvote/comment) → featured engine + email → home/leaderboards → admin.
+Skill versioning/changelog, collections/folders, Slack notifications, fork/remix lineage, a full analytics dashboard, and any "who copied" opt-out (public by default now; revisit with HR/Legal later). Build the loop end-to-end first: SSO → submit (+AI desc) → browse → detail (copy/upvote/comment) → featured engine + email → home/leaderboards → admin → bulk import.
+
+---
+
+## 9. Bulk Import (§4.9)
+
+Allows users to sync skill files from their local dev environment into SkillHub without manual copy-paste. Designed to be idempotent — re-running the import produces no duplicate skills.
+
+### 9.1 Data model additions
+- `Skill.sourceKey String?` — composite key `authorId:origin:relativePath`, unique per (authorId, sourceKey). Set only on bulk-imported skills.
+- `Skill.contentHash String?` — SHA-256 of the raw file content. Used to detect unchanged files.
+- `PersonalAccessToken` — hashed token for CLI auth (max 10 per user). Fields: `id, userId, name, tokenHash, lastUsedAt, createdAt`.
+
+### 9.2 Scanned paths
+| Origin key | Path |
+|---|---|
+| `claude-global` | `~/.claude/skills/**/*.md` |
+| `claude-local` | `.claude/skills/**/*.md` |
+| `cursor-skills` | `.cursor/skills/**/*.md` |
+| `cursor-rules` | `.cursor/rules/**/*.mdc` |
+| `cursorrules` | `.cursorrules` |
+
+### 9.3 Frontmatter parsing (gray-matter)
+- `title` / `name` → skill title (fallback: filename → Title Case)
+- `description` / `desc` → skill description (fallback: AI-generate on first import)
+- `toolType` / `tool_type` / `tool` → `Claude | Cursor | Both` (fallback: inferred from origin)
+- `tags` / `categories` → string array (fallback: `["claude"]` or `["cursor"]`)
+
+### 9.4 Dedup logic
+1. Look up existing skill by `(authorId, sourceKey)`.
+2. If none → **new**: create skill, generate AI description if missing, log `skill_submit`.
+3. If found and `contentHash` matches → **unchanged**: skip.
+4. If found and hash differs → **updated**: overwrite `title, description, content, toolType, tags, contentHash` in place. No version history.
+
+### 9.5 Browser import (`/import`)
+- Step 1 — **Pick**: folder picker (`webkitdirectory`) or ZIP upload.
+- Client-side parsing (gray-matter in browser) + `classifyImportCandidates` server action returns new/updated/unchanged for each file.
+- Step 2 — **Review screen**: table of all candidates with status badges, checkboxes to include/exclude (unchanged pre-deselected), per-file title/description/tags preview.
+- Step 3 — **Submit**: POST `/api/import`, show result summary.
+
+### 9.6 API endpoint (`POST /api/import`)
+- Auth: NextAuth session cookie **or** `Authorization: Bearer <PAT>`.
+- Body: `{ files: [{ origin, relativePath, content }] }` (max 200 files).
+- Returns: `{ results: [{ relativePath, status, skillId }] }`.
+
+### 9.7 CLI (`cli/import.ts`)
+- Run with `npx tsx cli/import.ts --token shpat_… [--url https://skillhub.example.com] [--dry-run]`.
+- Reads token from `--token` flag or `SKILLHUB_TOKEN` env var.
+- Auto-discovers all scanned paths from `$HOME` and `$CWD`.
+- Prints a summary table then POSTs to `/api/import`.
+- Suitable for cron: `0 * * * * npx tsx /path/to/cli/import.ts`.
+
+### 9.8 PAT management
+- UI in `/u/[id]` profile page (own profile only): generate named tokens, copy raw token (shown once), revoke.
+- API: `GET/POST /api/tokens` (list/create), `DELETE /api/tokens/[id]` (revoke).

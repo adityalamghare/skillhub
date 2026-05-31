@@ -29,6 +29,7 @@ Internal "Product Hunt for AI skills": employees publish Claude/Cursor skill fil
 6. Featured Score + eligibility, with unit tests (§5)
 7. Featured email workflow + admin console (§4.5, §4.8)
 8. Home dashboard, gamification, leaderboards, badges (§4.6, §4.7)
+9. Bulk import: browser uploader + review screen, `/api/import` endpoint, CLI, PATs (§9)
 
 Do not jump ahead. Get each slice running and ask me to test before moving on.
 
@@ -36,6 +37,7 @@ Do not jump ahead. Get each slice running and ask me to test before moving on.
 - **Real integrations, not fakes.** Google OAuth and the org email send are real. Scaffold them with clearly-marked `// TODO` stubs and env vars (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `RESEND_API_KEY`, etc.). Never simulate them with hardcoded mocks.
 - **Secrets in `.env` only.** Never hardcode keys (incl. `ANTHROPIC_API_KEY`). Add `.env` to `.gitignore`. Keep an `.env.example` with placeholder values.
 - **Do not build anything in "Out of scope for v1"** (spec §8): no versioning, collections, Slack, fork lineage, analytics dashboard, or who-copied opt-out.
+- **Bulk import is in-scope** (spec §9): `sourceKey`, `contentHash`, PATs, `/import` page, `/api/import`, `cli/import.ts`.
 - **Counters are derived** from Vote/Comment/CopyEvent tables, not stored denormalized.
 - Ask before destructive DB operations (drops, resets) and before changing auth or scoring code in bulk.
 

@@ -21,6 +21,7 @@ model User {
   comments  Comment[]
   copies    CopyEvent[]
   features  Feature[]  @relation("FeatureSelectedBy")
+  tokens    PersonalAccessToken[]
 }
 
 model Skill {
@@ -32,6 +33,8 @@ model Skill {
   tags        String[]
   authorId    String
   hidden      Boolean  @default(false)
+  sourceKey   String?  // authorId:origin:relativePath — unique per author, set on bulk import
+  contentHash String?  // sha256 of raw content — used for import dedup
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -40,6 +43,8 @@ model Skill {
   comments  Comment[]
   copies    CopyEvent[]
   features  Feature[]
+
+  @@unique([authorId, sourceKey])
 }
 
 model Vote {
@@ -95,6 +100,17 @@ model Feature {
 
   skill        Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
   selectedBy   User  @relation("FeatureSelectedBy", fields: [selectedById], references: [id])
+}
+
+model PersonalAccessToken {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  tokenHash   String    @unique // sha256 of the raw token
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Admin-tunable config stored in DB (key/value pairs)
