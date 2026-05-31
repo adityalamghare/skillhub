@@ -118,18 +118,18 @@ export default async function Home() {
           </div>
 
           {/* Sidebar: impact + badges */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:pt-7">
 
             {/* Your impact */}
             <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <Avatar src={user.image ?? null} name={user.name ?? ""} size={32} />
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 leading-tight">{user.name}</p>
-                  <p className="text-xs text-gray-400">{user.email}</p>
+                  <p className="text-base font-semibold text-gray-900 leading-tight">{user.name}</p>
+                  <p className="text-sm text-gray-400">{user.email}</p>
                 </div>
               </div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Your impact</p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">Your impact</p>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <ImpactStat n={impact.mySkills}      label="skills" />
                 <ImpactStat n={impact.copiesReceived}  label="copies" />
@@ -139,7 +139,7 @@ export default async function Home() {
 
             {/* Badges */}
             <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Badges</p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">Badges</p>
               <div className="space-y-2">
                 {impact.badges.map(({ badge, earned }) => (
                   <div
@@ -154,10 +154,10 @@ export default async function Home() {
                       {badge.emoji}
                     </span>
                     <div>
-                      <p className={`text-sm font-semibold leading-tight ${earned ? "" : "text-gray-400"}`}>
+                      <p className={`text-base font-semibold leading-tight ${earned ? "" : "text-gray-400"}`}>
                         {badge.name}
                       </p>
-                      <p className={`text-xs leading-tight mt-0.5 ${earned ? "opacity-70" : "text-gray-400"}`}>
+                      <p className={`text-sm leading-tight mt-0.5 ${earned ? "opacity-70" : "text-gray-400"}`}>
                         {badge.description}
                       </p>
                     </div>
@@ -189,8 +189,8 @@ export default async function Home() {
 function SectionHeader({ title, href }: { title: string; href: string }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <h2 className="text-base font-bold text-gray-900">{title}</h2>
-      <a href={href} className="text-xs text-indigo-600 hover:underline">See all →</a>
+      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+      <a href={href} className="text-sm text-indigo-600 hover:underline">See all →</a>
     </div>
   );
 }
@@ -231,24 +231,24 @@ function SkillList({
           href={`/skill/${s.id}`}
           className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition group"
         >
-          <span className="w-5 text-center text-xs font-bold text-gray-300">{i + 1}</span>
+          <span className="w-5 text-center text-sm font-bold text-gray-300">{i + 1}</span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 truncate">
+            <p className="text-base font-semibold text-gray-900 group-hover:text-indigo-600 truncate">
               {s.title}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
               <Avatar src={s.author.avatar} name={s.author.name} size={14} />
-              <span className="text-xs text-gray-400 truncate">{s.author.name}</span>
+              <span className="text-sm text-gray-400 truncate">{s.author.name}</span>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
+          <div className="flex items-center gap-3 text-sm text-gray-400 shrink-0">
             {showScore && s.score !== undefined && (
               <span className="font-semibold text-indigo-600">{s.score}pts</span>
             )}
             <span>📋 {s._count.copies}</span>
             <span>▲ {s._count.votes}</span>
           </div>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${TOOL_COLORS[s.toolType] ?? "bg-gray-100 text-gray-600"}`}>
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-sm font-medium ${TOOL_COLORS[s.toolType] ?? "bg-gray-100 text-gray-600"}`}>
             {s.toolType}
           </span>
         </a>
@@ -270,7 +270,7 @@ function ImpactStat({ n, label }: { n: number; label: string }) {
   return (
     <div className="rounded-lg bg-gray-50 py-2">
       <p className="text-lg font-bold text-gray-900">{n}</p>
-      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-sm text-gray-500">{label}</p>
     </div>
   );
 }
