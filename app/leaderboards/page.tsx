@@ -2,6 +2,7 @@ import Image from "next/image";
 import Nav from "@/app/components/Nav";
 import { getLeaderboards } from "@/lib/queries/home";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Leaderboards — SkillHub" };
 
 export default async function LeaderboardsPage() {

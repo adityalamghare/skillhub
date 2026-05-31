@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { auth } from "@/auth";
 import Image from "next/image";
 import Nav from "@/app/components/Nav";

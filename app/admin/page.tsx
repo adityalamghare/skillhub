@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getRankedEligibleSkills } from "@/lib/queries/featured";
 import { prisma } from "@/lib/prisma";
 import { manualFeatureSkill } from "@/lib/actions/featured";

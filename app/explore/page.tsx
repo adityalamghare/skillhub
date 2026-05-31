@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Suspense } from "react";
 import { getSkills, getAllTags, getAllAuthors, PAGE_SIZE, type SortOption } from "@/lib/queries/skills";
 import SkillCard from "./SkillCard";
