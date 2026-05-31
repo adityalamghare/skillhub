@@ -13,7 +13,9 @@
       "Bash(unzip -t /tmp/pg.zip)",
       "Bash(mkdir -p /Users/adityalamghare/.local/pgsql)",
       "Bash(unzip -q /tmp/pg.zip -d /Users/adityalamghare/.local/)",
-      "Bash(ls /Users/adityalamghare/.local/pgsql/bin/ | head -10)"
+      "Bash(ls /Users/adityalamghare/.local/pgsql/bin/ | head -10)",
+      "Bash(/Users/adityalamghare/.local/node/bin/node /Users/adityalamghare/.local/node/lib/node_modules/npm/bin/npm-cli.js run build)",
+      "Bash(PATH=/Users/adityalamghare/.local/node/bin:__TRACKED_VAR__ node_modules/.bin/next build)"
     ]
   }
 }
