@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import DeleteSkillButton from "./DeleteSkillButton";
 import SkillMarkdown from "./SkillMarkdown";
 import SkillInteractions from "./SkillInteractions";
 
@@ -86,12 +87,15 @@ export default async function SkillPage({
             <h1 className="text-2xl font-bold text-gray-900">{skill.title}</h1>
             <div className="flex items-center gap-2">
               {(currentUserId === skill.authorId || session?.user?.isAdmin) && (
-                <Link
-                  href={`/skill/${skill.id}/edit`}
-                  className="text-xs text-gray-500 border border-gray-300 rounded-md px-2.5 py-1 hover:bg-gray-50 transition"
-                >
-                  Edit
-                </Link>
+                <>
+                  <Link
+                    href={`/skill/${skill.id}/edit`}
+                    className="text-xs text-gray-500 border border-gray-300 rounded-md px-2.5 py-1 hover:bg-gray-50 transition"
+                  >
+                    Edit
+                  </Link>
+                  <DeleteSkillButton skillId={skill.id} />
+                </>
               )}
               <span className={`text-xs font-semibold rounded-full border px-2.5 py-1 ${badgeCls}`}>
                 {skill.toolType}
