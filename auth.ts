@@ -10,45 +10,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
 
   callbacks: {
-    async signIn({ profile }) {
-      if (!profile?.email) return false;
+    async signIn({ user, profile }) {
+      // Email can live on profile (OAuth raw) or the derived user object.
+      const rawEmail = profile?.email ?? user?.email ?? "";
 
       // Read env vars at call time (not module load) so Vercel picks up runtime values.
       const allowedDomain = process.env.ALLOWED_DOMAIN ?? "freshworks.com";
       const allowedGuestEmails = parseEmailList(process.env.ALLOWED_GUEST_EMAILS);
       const adminEmails = parseEmailList(process.env.ADMIN_EMAILS);
 
-      const normalizedEmail = profile.email.trim().toLowerCase();
-      const domainAllowed = allowedDomain && normalizedEmail.endsWith(`@${allowedDomain}`);
+      const normalizedEmail = rawEmail.trim().toLowerCase();
+      const domainAllowed = !!normalizedEmail && allowedDomain
+        ? normalizedEmail.endsWith(`@${allowedDomain}`)
+        : false;
       const guestAllowed = allowedGuestEmails.includes(normalizedEmail);
 
       console.log(JSON.stringify({
         event: "signIn_attempt",
         normalizedEmail,
+        profileEmail: profile?.email ?? null,
+        userEmail: user?.email ?? null,
         domainAllowed,
         guestAllowed,
         allowedGuestEmails,
       }));
 
+      if (!normalizedEmail) return false;
       if (!domainAllowed && !guestAllowed) {
         return false;
       }
 
       const isAdmin = adminEmails.includes(normalizedEmail);
+      const displayName = profile?.name ?? user?.name ?? normalizedEmail;
+      const avatar =
+        (profile as { picture?: string } | undefined)?.picture ?? user?.image ?? null;
 
       await prisma.user.upsert({
         where: { email: normalizedEmail },
-        update: {
-          name: profile.name ?? normalizedEmail,
-          avatar: (profile as { picture?: string }).picture ?? null,
-          isAdmin,
-        },
-        create: {
-          email: normalizedEmail,
-          name: profile.name ?? normalizedEmail,
-          avatar: (profile as { picture?: string }).picture ?? null,
-          isAdmin,
-        },
+        update: { name: displayName, avatar, isAdmin },
+        create: { email: normalizedEmail, name: displayName, avatar, isAdmin },
       });
 
       return true;
