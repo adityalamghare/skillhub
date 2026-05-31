@@ -1,5 +1,6 @@
 import { auth, signOut } from "@/auth";
 import Image from "next/image";
+import NotificationBell from "./NotificationBell";
 
 export default async function Nav() {
   const session = await auth();
@@ -32,6 +33,7 @@ export default async function Nav() {
 
         {/* Right */}
         <div className="flex items-center gap-3">
+          {user?.id && <NotificationBell />}
           <a
             href="/submit"
             className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 transition"

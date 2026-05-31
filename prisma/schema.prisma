@@ -23,6 +23,7 @@ model User {
   copies    CopyEvent[]
   features  Feature[]  @relation("FeatureSelectedBy")
   tokens    PersonalAccessToken[]
+  notificationViews NotificationView[]
 }
 
 model Skill {
@@ -101,6 +102,22 @@ model Feature {
 
   skill        Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
   selectedBy   User  @relation("FeatureSelectedBy", fields: [selectedById], references: [id])
+}
+
+// Per-recipient read state for in-product notifications.
+// Notification *content* is derived from Vote/CopyEvent/Comment; this table only
+// records when a user last viewed a given (skill, kind) notification group.
+// A group is "unread" when its latest activity is newer than seenAt (or no row exists).
+model NotificationView {
+  id      String   @id @default(cuid())
+  userId  String
+  skillId String
+  kind    String   // "upvote" | "copy" | "comment"
+  seenAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId, kind])
 }
 
 model PersonalAccessToken {
