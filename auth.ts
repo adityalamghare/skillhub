@@ -2,15 +2,9 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { prisma } from "@/lib/prisma";
 
-const allowedDomain = process.env.ALLOWED_DOMAIN ?? "freshworks.com";
-const adminEmails = (process.env.ADMIN_EMAILS ?? "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
-const allowedGuestEmails = (process.env.ALLOWED_GUEST_EMAILS ?? "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+function parseEmailList(envVar: string | undefined) {
+  return (envVar ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -19,9 +13,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ profile }) {
       if (!profile?.email) return false;
 
+      // Read env vars at call time (not module load) so Vercel picks up runtime values.
+      const allowedDomain = process.env.ALLOWED_DOMAIN ?? "freshworks.com";
+      const allowedGuestEmails = parseEmailList(process.env.ALLOWED_GUEST_EMAILS);
+      const adminEmails = parseEmailList(process.env.ADMIN_EMAILS);
+
       const normalizedEmail = profile.email.trim().toLowerCase();
       const domainAllowed = allowedDomain && normalizedEmail.endsWith(`@${allowedDomain}`);
       const guestAllowed = allowedGuestEmails.includes(normalizedEmail);
+
+      console.log(JSON.stringify({
+        event: "signIn_attempt",
+        normalizedEmail,
+        domainAllowed,
+        guestAllowed,
+        allowedGuestEmails,
+      }));
 
       if (!domainAllowed && !guestAllowed) {
         return false;
