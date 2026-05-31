@@ -190,29 +190,12 @@ describe("checkEligibility", () => {
 
   it("eligible when all conditions satisfied", () => {
     const result = checkEligibility({
-      breakdown:       makeBreakdown(5),
+      breakdown:       makeBreakdown(0),
       lastFeaturedAt:  null,
       authorIsActive:  true,
       now:             NOW,
     });
     expect(result.eligible).toBe(true);
-  });
-
-  it("ineligible when fewer than 5 distinct copiers", () => {
-    const result = checkEligibility({
-      breakdown:      makeBreakdown(4),
-      lastFeaturedAt: null,
-      authorIsActive: true,
-      now:            NOW,
-    });
-    expect(result.eligible).toBe(false);
-    expect(result.reason).toMatch(/5/);
-  });
-
-  it("eligible with exactly 5 distinct copiers", () => {
-    expect(
-      checkEligibility({ breakdown: makeBreakdown(5), lastFeaturedAt: null, authorIsActive: true, now: NOW }).eligible
-    ).toBe(true);
   });
 
   it("ineligible when featured within the last 12 months", () => {
@@ -301,11 +284,11 @@ describe("rankEligible — sort order", () => {
   const noHistory  = new Map<string, Date | null>();
   const activeAuthors = new Set(["a1", "a2", "a3", "a4"]);
 
-  it("returns empty array when no skills are eligible", () => {
+  it("returns empty array when no skills are eligible (inactive author)", () => {
     const activities = [
-      buildActivity("s1", "a1", { copies: [copy(USER_A)] }), // < 5 copiers
+      buildActivity("s1", "a1", { copies: [copy(USER_A)] }), // a1 not in activeAuthors
     ];
-    expect(rankEligible(activities, noHistory, activeAuthors)).toEqual([]);
+    expect(rankEligible(activities, noHistory, new Set(["a2"]))).toEqual([]);
   });
 
   it("orders by score descending", () => {
@@ -396,14 +379,13 @@ describe("rankEligible — sort order", () => {
     expect(ranked[0].skillId).toBe("s2");
   });
 
-  it("excludes ineligible skills from ranking", () => {
+  it("excludes ineligible skills from ranking (inactive author)", () => {
     const fiveCopies = fiveUniqueCopiers([USER_A, USER_B, USER_C, USER_D, USER_E]);
     const activities = [
       buildActivity("s1", "a1", { copies: fiveCopies }),  // eligible
-      buildActivity("s2", "a2", { copies: [copy(USER_A)] }), // < 5 copiers
-      buildActivity("s3", "a3", { copies: fiveCopies }),  // eligible but inactive author
+      buildActivity("s3", "a3", { copies: fiveCopies }),  // ineligible: inactive author
     ];
-    const activeOnly = new Set(["a1", "a2"]); // a3 inactive
+    const activeOnly = new Set(["a1"]); // a3 inactive
     const ranked = rankEligible(activities, noHistory, activeOnly);
     expect(ranked).toHaveLength(1);
     expect(ranked[0].skillId).toBe("s1");

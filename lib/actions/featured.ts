@@ -214,6 +214,7 @@ export async function sendFeaturedEmailAction(
     author:      feature.skill.author,
     creatorNote: feature.creatorNote,
     appUrl,
+    featureId:   featureId,
   };
 
   const result = await sendFeaturedEmail(payload, recipients);

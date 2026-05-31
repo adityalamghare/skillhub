@@ -5,20 +5,36 @@ import {
   generateDescriptionAction,
   checkDuplicatesAction,
   submitSkillAction,
+  updateSkillAction,
 } from "@/lib/actions/skill";
 
 const TOOL_TYPES = ["Claude", "Cursor", "Both"] as const;
 
-export default function SubmitForm() {
+interface InitialValues {
+  title: string;
+  content: string;
+  description: string;
+  toolType: string;
+  tags: string[];
+}
+
+export default function SubmitForm({
+  skillId,
+  initial,
+}: {
+  skillId?: string;
+  initial?: InitialValues;
+}) {
+  const isEdit = !!skillId;
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Field state
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [description, setDescription] = useState("");
-  const [toolType, setToolType] = useState<string>("Claude");
+  // Field state — seeded from initial values when editing
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [content, setContent] = useState(initial?.content ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [toolType, setToolType] = useState<string>(initial?.toolType ?? "Claude");
   const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
 
   // UI state
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -79,7 +95,9 @@ export default function SubmitForm() {
     fd.set("tags", tags.join(","));
 
     startTransition(async () => {
-      const result = await submitSkillAction(fd);
+      const result = isEdit
+        ? await updateSkillAction(skillId!, fd)
+        : await submitSkillAction(fd);
       if (result && "error" in result) setSubmitError(result.error);
     });
   }
@@ -229,13 +247,21 @@ export default function SubmitForm() {
       )}
 
       {/* Submit button */}
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-4">
+        {!isEdit && (
+          <p className="text-sm text-gray-400">
+            Have many files?{" "}
+            <a href="/import" className="text-indigo-600 hover:underline">
+              Bulk import from your local skills folder
+            </a>
+          </p>
+        )}
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="ml-auto rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          {isPending ? "Publishing…" : "Publish skill"}
+          {isPending ? (isEdit ? "Saving…" : "Publishing…") : (isEdit ? "Save changes" : "Publish skill")}
         </button>
       </div>
     </form>

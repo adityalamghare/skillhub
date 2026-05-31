@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { copySkillAction, toggleVoteAction, addCommentAction, deleteCommentAction } from "@/lib/actions/skill";
+import { copySkillAction, toggleVoteAction, addCommentAction, editCommentAction, deleteCommentAction } from "@/lib/actions/skill";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -163,14 +163,39 @@ function CommentRow({
   currentUserId: string;
   onReply?: () => void;
 }) {
-  const [deleting, startTransition] = useTransition();
+  const [, startDeleteTransition] = useTransition();
+  const [, startEditTransition] = useTransition();
   const [deleted, setDeleted] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editBody, setEditBody] = useState(comment.body);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [displayBody, setDisplayBody] = useState(comment.body);
 
   function handleDelete() {
     if (!confirm("Delete this comment?")) return;
-    startTransition(async () => {
+    startDeleteTransition(async () => {
       const result = await deleteCommentAction(comment.id);
       if (result.ok) setDeleted(true);
+    });
+  }
+
+  function handleEdit() {
+    setEditBody(displayBody);
+    setEditing(true);
+    setEditError(null);
+  }
+
+  function handleEditSave() {
+    if (!editBody.trim()) return;
+    setEditError(null);
+    startEditTransition(async () => {
+      const result = await editCommentAction(comment.id, editBody);
+      if (result.ok) {
+        setDisplayBody(editBody.trim());
+        setEditing(false);
+      } else {
+        setEditError(result.error ?? "Failed to save.");
+      }
     });
   }
 
@@ -189,18 +214,52 @@ function CommentRow({
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-gray-900">{comment.user.name}</span>
           <span className="text-xs text-gray-400">{fmtDate(comment.createdAt)}</span>
-          {comment.userId === currentUserId && (
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50"
-            >
-              {deleting ? "Deleting…" : "Delete"}
-            </button>
+          {comment.userId === currentUserId && !editing && (
+            <>
+              <button
+                onClick={handleEdit}
+                className="text-xs text-gray-400 hover:text-indigo-600"
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleDelete}
+                className="text-xs text-gray-400 hover:text-red-500"
+              >
+                Delete
+              </button>
+            </>
           )}
         </div>
-        <p className="text-sm text-gray-700 mt-0.5 break-words">{comment.body}</p>
-        {onReply && (
+        {editing ? (
+          <div className="mt-1 space-y-1">
+            <textarea
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              rows={2}
+              className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            {editError && <p className="text-xs text-red-500">{editError}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={handleEditSave}
+                disabled={!editBody.trim()}
+                className="rounded bg-indigo-600 text-white px-3 py-1 text-xs font-medium disabled:opacity-40 hover:bg-indigo-700"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="rounded border border-gray-300 px-3 py-1 text-xs text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-700 mt-0.5 break-words">{displayBody}</p>
+        )}
+        {onReply && !editing && (
           <button onClick={onReply} className="text-xs text-gray-400 hover:text-indigo-600 mt-1">
             Reply
           </button>

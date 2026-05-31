@@ -17,6 +17,7 @@ export default async function Nav() {
             {[
               { href: "/explore",      label: "Explore" },
               { href: "/leaderboards", label: "Leaderboards" },
+              { href: "/import",       label: "Import" },
             ].map((n) => (
               <a
                 key={n.href}
@@ -40,9 +41,9 @@ export default async function Nav() {
           {user?.isAdmin && (
             <a href="/admin" className="text-xs text-gray-400 hover:text-gray-600">Admin</a>
           )}
-          {user?.image && (
-            <form action={async () => { "use server"; await signOut({ redirectTo: "/auth/signin" }); }}>
-              <button type="submit" title="Sign out" className="flex items-center">
+          {user?.id && user?.image && (
+            <div className="flex items-center gap-2">
+              <a href={`/u/${user.id}`} title="Your profile">
                 <Image
                   src={user.image}
                   alt={user.name ?? "avatar"}
@@ -50,8 +51,11 @@ export default async function Nav() {
                   height={30}
                   className="rounded-full hover:ring-2 hover:ring-indigo-400 transition"
                 />
-              </button>
-            </form>
+              </a>
+              <form action={async () => { "use server"; await signOut({ redirectTo: "/auth/signin" }); }}>
+                <button type="submit" className="text-xs text-gray-400 hover:text-gray-600">Sign out</button>
+              </form>
+            </div>
           )}
         </div>
       </div>

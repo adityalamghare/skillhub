@@ -9,6 +9,7 @@ export interface ExploreParams {
   q?: string;
   tool?: string;
   tag?: string;
+  author?: string;
   sort?: SortOption;
   page?: number;
 }
@@ -28,7 +29,7 @@ export interface SkillCard {
 // Build the shared WHERE clause
 // ---------------------------------------------------------------------------
 function buildWhere(params: ExploreParams) {
-  const { q, tool, tag } = params;
+  const { q, tool, tag, author } = params;
 
   return {
     hidden: false, // never show hidden skills to regular users
@@ -36,6 +37,7 @@ function buildWhere(params: ExploreParams) {
       ? { toolType: tool as ToolType }
       : {}),
     ...(tag ? { tags: { has: tag } } : {}),
+    ...(author ? { author: { name: { equals: author, mode: "insensitive" as const } } } : {}),
     ...(q?.trim()
       ? {
           OR: [
@@ -157,4 +159,16 @@ export async function getAllTags(): Promise<string[]> {
   const skills = await prisma.skill.findMany({ select: { tags: true } });
   const tagSet = new Set(skills.flatMap((s) => s.tags));
   return Array.from(tagSet).sort();
+}
+
+// ---------------------------------------------------------------------------
+// All authors who have submitted at least one visible skill
+// ---------------------------------------------------------------------------
+export async function getAllAuthors(): Promise<{ id: string; name: string }[]> {
+  const authors = await prisma.user.findMany({
+    where: { skills: { some: { hidden: false } } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+  return authors.filter((a) => a.name);
 }

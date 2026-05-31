@@ -19,19 +19,21 @@ const TOOL_OPTIONS = [
 
 interface Props {
   allTags: string[];
+  allAuthors: { id: string; name: string }[];
 }
 
-export default function ExploreControls({ allTags }: Props) {
+export default function ExploreControls({ allTags, allAuthors }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const current = {
-    q:    searchParams.get("q") ?? "",
-    tool: searchParams.get("tool") ?? "",
-    tag:  searchParams.get("tag") ?? "",
-    sort: searchParams.get("sort") ?? "trending",
+    q:      searchParams.get("q") ?? "",
+    tool:   searchParams.get("tool") ?? "",
+    tag:    searchParams.get("tag") ?? "",
+    author: searchParams.get("author") ?? "",
+    sort:   searchParams.get("sort") ?? "trending",
   };
 
   const push = useCallback(
@@ -111,10 +113,24 @@ export default function ExploreControls({ allTags }: Props) {
           </select>
         )}
 
+        {/* Author filter */}
+        {allAuthors.length > 0 && (
+          <select
+            value={current.author}
+            onChange={(e) => push({ author: e.target.value })}
+            className="rounded-lg border border-gray-300 py-1.5 pl-3 pr-8 text-xs text-gray-700 shadow-sm focus:border-indigo-500 focus:outline-none"
+          >
+            <option value="">All authors</option>
+            {allAuthors.map((a) => (
+              <option key={a.id} value={a.name}>{a.name}</option>
+            ))}
+          </select>
+        )}
+
         {/* Active filter chips */}
-        {(current.q || current.tool || current.tag) && (
+        {(current.q || current.tool || current.tag || current.author) && (
           <button
-            onClick={() => push({ q: "", tool: "", tag: "" })}
+            onClick={() => push({ q: "", tool: "", tag: "", author: "" })}
             className="text-xs text-gray-400 hover:text-gray-600 underline"
           >
             Clear filters

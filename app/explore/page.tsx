@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getSkills, getAllTags, PAGE_SIZE, type SortOption } from "@/lib/queries/skills";
+import { getSkills, getAllTags, getAllAuthors, PAGE_SIZE, type SortOption } from "@/lib/queries/skills";
 import SkillCard from "./SkillCard";
 import ExploreControls from "./ExploreControls";
 import Pagination from "./Pagination";
@@ -12,6 +12,7 @@ interface PageProps {
     q?: string;
     tool?: string;
     tag?: string;
+    author?: string;
     sort?: string;
     page?: string;
   }>;
@@ -24,12 +25,13 @@ export default async function ExplorePage({ searchParams }: PageProps) {
     ? sp.sort
     : "trending") as SortOption;
 
-  const [{ skills, total, totalPages }, allTags] = await Promise.all([
-    getSkills({ q: sp.q, tool: sp.tool, tag: sp.tag, sort, page }),
+  const [{ skills, total, totalPages }, allTags, allAuthors] = await Promise.all([
+    getSkills({ q: sp.q, tool: sp.tool, tag: sp.tag, author: sp.author, sort, page }),
     getAllTags(),
+    getAllAuthors(),
   ]);
 
-  const hasFilters = !!(sp.q || sp.tool || sp.tag);
+  const hasFilters = !!(sp.q || sp.tool || sp.tag || sp.author);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -49,7 +51,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
         {/* Controls — needs Suspense because it reads useSearchParams */}
         <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-gray-100" />}>
           <div className="mb-8">
-            <ExploreControls allTags={allTags} />
+            <ExploreControls allTags={allTags} allAuthors={allAuthors} />
           </div>
         </Suspense>
 

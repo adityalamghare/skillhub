@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import SkillMarkdown from "./SkillMarkdown";
@@ -75,22 +76,32 @@ export default async function SkillPage({
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-3xl px-4 py-10">
         {/* Back */}
-        <a href="/explore" className="text-sm text-gray-500 hover:text-gray-700">
+        <Link href="/explore" className="text-sm text-gray-500 hover:text-gray-700">
           ← Back to Explore
-        </a>
+        </Link>
 
         {/* Header */}
         <div className="mt-4 bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <h1 className="text-2xl font-bold text-gray-900">{skill.title}</h1>
-            <span className={`text-xs font-semibold rounded-full border px-2.5 py-1 ${badgeCls}`}>
-              {skill.toolType}
-            </span>
+            <div className="flex items-center gap-2">
+              {(currentUserId === skill.authorId || session?.user?.isAdmin) && (
+                <Link
+                  href={`/skill/${skill.id}/edit`}
+                  className="text-xs text-gray-500 border border-gray-300 rounded-md px-2.5 py-1 hover:bg-gray-50 transition"
+                >
+                  Edit
+                </Link>
+              )}
+              <span className={`text-xs font-semibold rounded-full border px-2.5 py-1 ${badgeCls}`}>
+                {skill.toolType}
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
             {skill.author.avatar && <span className="text-base">{skill.author.avatar}</span>}
-            <span>{skill.author.name}</span>
+            <Link href={`/u/${skill.authorId}`} className="hover:text-indigo-600 hover:underline">{skill.author.name}</Link>
             <span>·</span>
             <span>{new Date(skill.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
           </div>
@@ -106,7 +117,7 @@ export default async function SkillPage({
           )}
 
           {skill.description && (
-            <p className="mt-3 text-gray-600">{skill.description}</p>
+            <p className="mt-3 text-sm leading-6 text-gray-600">{skill.description}</p>
           )}
         </div>
 
@@ -132,7 +143,7 @@ export default async function SkillPage({
           </div>
         ) : (
           <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500">
-            <a href="/auth/signin" className="text-indigo-600 underline font-medium">Sign in</a> to copy, upvote, or comment.
+            <Link href="/auth/signin" className="text-indigo-600 underline font-medium">Sign in</Link> to copy, upvote, or comment.
           </div>
         )}
       </div>
