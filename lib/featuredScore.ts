@@ -133,17 +133,8 @@ export function checkEligibility({
   authorIsActive,
   now = new Date(),
 }: EligibilityInput): EligibilityResult {
-  const minCopiers = getMinCopiersFromEnv();
-
   if (!authorIsActive) {
     return { eligible: false, reason: "Author is not an active employee." };
-  }
-
-  if (breakdown.uniqueNonAuthorCopiers < minCopiers) {
-    return {
-      eligible: false,
-      reason: `Needs ≥${minCopiers} distinct non-author copiers (has ${breakdown.uniqueNonAuthorCopiers}).`,
-    };
   }
 
   if (lastFeaturedAt !== null) {

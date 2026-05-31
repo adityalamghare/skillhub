@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import { submitCreatorNote } from "@/lib/actions/featured";
+import NoteForm from "./NoteForm";
 
 export const metadata = { title: "Add Your Note — SkillHub" };
 
@@ -24,7 +24,6 @@ export default async function CreatorNotePage({
   const isAuthor = feature.skill.author.id === session.user.id;
   const alreadySent = feature.status === "sent";
 
-  // Compute 48h deadline
   const deadline = new Date(feature.selectedAt);
   deadline.setHours(deadline.getHours() + 48);
   const expired = new Date() > deadline;
@@ -64,44 +63,12 @@ export default async function CreatorNotePage({
         ) : null}
 
         {!alreadySent && isAuthor && (
-          <form
-            action={async (fd: FormData) => {
-              "use server";
-              const note = fd.get("note") as string;
-              await submitCreatorNote(featureId, note);
-              redirect("/");
-            }}
-            className="mt-4 space-y-4"
-          >
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Your note
-                <span className="ml-1 font-normal text-gray-400">
-                  (optional — shown in the featured email)
-                </span>
-              </label>
-              <textarea
-                name="note"
-                rows={4}
-                defaultValue={feature.creatorNote ?? ""}
-                placeholder="Share why you built this skill, when it works best, or any tips for using it…"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-y"
-              />
-            </div>
-
-            {!expired && (
-              <p className="text-xs text-gray-400">
-                Deadline: {deadline.toLocaleString()}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition"
-            >
-              Submit note
-            </button>
-          </form>
+          <NoteForm
+            featureId={featureId}
+            defaultNote={feature.creatorNote ?? ""}
+            deadline={deadline.toLocaleString()}
+            expired={expired}
+          />
         )}
       </div>
     </main>
