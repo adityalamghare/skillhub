@@ -39,39 +39,39 @@ export default async function Home() {
               🌟 Skill of the Month
             </p>
             <a
-              href={`/skill/${hero.skill.id}`}
+              href={`/skill/${hero!.skill.id}`}
               className="group block rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-6 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all"
             >
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
-                      {hero.skill.toolType}
+                      {hero!.skill.toolType}
                     </span>
-                    {hero.skill.tags.slice(0, 3).map((t) => (
+                    {hero!.skill.tags.slice(0, 3).map((t) => (
                       <span key={t} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">{t}</span>
                     ))}
                   </div>
                   <h2 className="text-xl font-bold text-gray-900 group-hover:text-indigo-700 transition mb-1">
-                    {hero.skill.title}
+                    {hero!.skill.title}
                   </h2>
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">{hero.skill.description}</p>
-                  {hero.creatorNote && (
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">{hero!.skill.description}</p>
+                  {hero!.creatorNote && (
                     <blockquote className="border-l-4 border-indigo-300 pl-3 text-sm italic text-gray-600">
-                      &ldquo;{hero.creatorNote}&rdquo;
-                      <span className="ml-2 not-italic text-gray-400">— {hero.skill.author.name}</span>
+                      &ldquo;{hero!.creatorNote}&rdquo;
+                      <span className="ml-2 not-italic text-gray-400">— {hero!.skill.author.name}</span>
                     </blockquote>
                   )}
                 </div>
                 <div className="flex sm:flex-col gap-4 sm:gap-2 sm:text-right shrink-0">
-                  <Stat label="copies"   n={hero.skill._count.copies}   />
-                  <Stat label="upvotes"  n={hero.skill._count.votes}    />
-                  <Stat label="comments" n={hero.skill._count.comments} />
+                  <Stat label="copies"   n={hero!.skill._count.copies}   />
+                  <Stat label="upvotes"  n={hero!.skill._count.votes}    />
+                  <Stat label="comments" n={hero!.skill._count.comments} />
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2">
-                <Avatar src={hero.skill.author.avatar} name={hero.skill.author.name} size={20} />
-                <span className="text-xs text-gray-500">by {hero.skill.author.name}</span>
+                <Avatar src={hero!.skill.author.avatar} name={hero!.skill.author.name} size={20} />
+                <span className="text-xs text-gray-500">by {hero!.skill.author.name}</span>
               </div>
             </a>
           </section>
