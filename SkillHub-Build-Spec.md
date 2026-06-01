@@ -69,7 +69,7 @@ Notes:
 - Render the `.md` (syntax-highlighted).
 - **Copy button:** copies raw `.md` to clipboard → logs a `CopyEvent` (dedup per user) → increments the copy counter → adds the user to the **public "Who copied this" list** (avatars + names + date). Copies are visible org-wide by default. Show a "Copied!" confirmation.
 - **Upvote:** toggle, one per user, author cannot upvote own skill.
-- **Comments:** threaded one level deep, edit/delete own, show author + timestamp.
+- **Comments:** flat threading under each root comment (unlimited replies, all replies reference the root `parentId`); edit/delete own; show author + timestamp. Any participant can reply to any comment in a thread.
 - Sidebar shows the "Who copied this" list.
 
 ### 4.4 Featured engine (see §5 for the algorithm)
@@ -93,6 +93,22 @@ Notes:
 
 ### 4.7 Leaderboards
 - Most-copied creators, Highest upvotes received, Top submitters (by skill count). Top 5 each, exclude self-actions.
+
+### 4.9 In-product notifications
+Users receive in-product (no email) notifications, accessible via a bell icon in the top nav (left of the Submit button). A red counter badge shows the unread count; opening the panel marks all as seen and the badge clears.
+
+**Four notification types**, grouped per `(skill, kind)` — groups never combine across skills:
+1. **Upvote** — `▲ User1, User2 +N upvoted your skill <Skill>` — triggered when others upvote a skill you authored.
+2. **Copy** — `📋 User1, User2 +N copied your skill <Skill>` — triggered when others copy a skill you authored.
+3. **Comment** — `💬 User1, User2 +N commented on your skill <Skill>` — triggered when others comment on a skill you authored.
+4. **Thread reply** — `↩️ User1, User2 +N replied in a thread on <Skill>` — triggered when someone replies in a comment thread you participated in (on another author's skill).
+
+**Rules:**
+- Author's own actions never trigger notifications (no self-pings).
+- Each group shows up to 3 distinct actor names + `+N` overflow for the rest.
+- Unread rows are highlighted (indigo tint + dot); previously-read rows are lighter.
+- Clicking a notification navigates to the skill detail page.
+- Read state is stored per `(userId, skillId, kind)` in a `NotificationView` table; notification content is derived from existing `Vote`/`CopyEvent`/`Comment` tables (no write on every event).
 
 ### 4.8 Admin console (admin-only)
 - Run automatic selection on demand; view the eligible ranking with scores (admin-visible).
