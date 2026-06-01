@@ -1,4 +1,7 @@
 export const dynamic = "force-dynamic";
+
+// DEMO BREAK — intentional error to simulate a bad deploy
+throw new Error("Simulated render error: database connection pool exhausted");
 import { auth } from "@/auth";
 import Image from "next/image";
 import Nav from "@/app/components/Nav";
