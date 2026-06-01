@@ -17,7 +17,10 @@ export const authConfig: NextAuthConfig = {
     error: "/auth/error",
   },
   callbacks: {
-    authorized({ auth }) {
+    authorized({ auth, request }) {
+      // Allow /api/health unauthenticated so the incident-bridge heartbeat
+      // can hit the real route handler (which throws on the break branch).
+      if (request.nextUrl.pathname === "/api/health") return true;
       return !!auth?.user;
     },
   },
